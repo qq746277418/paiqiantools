@@ -1,0 +1,2688 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>领地经营台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-2: #0d1220;
+    --card: #131829;
+    --card-2: #1a2038;
+    --border: #252c45;
+    --border-soft: #1e2540;
+    --gold: #f0b90b;
+    --gold-soft: #fcd535;
+    --gold-dim: rgba(240, 185, 11, 0.15);
+    --green: #00d4aa;
+    --green-dim: rgba(0, 212, 170, 0.15);
+    --red: #f6465d;
+    --red-dim: rgba(246, 70, 93, 0.15);
+    --blue: #4a9eff;
+    --blue-dim: rgba(74, 158, 255, 0.15);
+    --text: #eaecef;
+    --text-2: #b7bdc6;
+    --text-3: #848e9c;
+    --text-4: #5e6673;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', 'JetBrains Mono', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(240, 185, 11, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 212, 170, 0.05), transparent),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Oswald', sans-serif; letter-spacing: 0.02em; }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 14px 100px;
+    position: relative;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    padding: 18px 4px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-dot {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 2px;
+    box-shadow: 0 0 12px var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .brand-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+  .brand-sub {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .icon-btn:active { transform: scale(0.92); background: var(--card-2); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* ===== Capital Bar ===== */
+  .capital-bar {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(240,185,11,0.06), rgba(240,185,11,0.02));
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+  }
+  .capital-label {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .capital-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-top: 2px;
+  }
+  .capital-edit {
+    font-size: 11px;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+  .capital-edit:active { background: var(--gold-dim); }
+
+  /* ===== Today's Bet Card ===== */
+  .today-bet-card {
+    background: linear-gradient(135deg, rgba(240,185,11,0.08), rgba(240,185,11,0.02));
+    border: 1px solid rgba(240,185,11,0.25);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .today-bet-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(240,185,11,0.15), transparent 70%);
+    pointer-events: none;
+  }
+  .today-bet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .today-bet-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+  .today-bet-title svg { width: 14px; height: 14px; }
+  .today-bet-date {
+    font-size: 10px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .today-bet-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .today-bet-amount .label {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .today-bet-amount .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .today-bet-amount .unit {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .today-bet-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .today-bet-info-item {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .today-bet-info-item .lbl {
+    font-size: 9px;
+    color: var(--text-4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .today-bet-info-item .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .today-bet-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .today-bet-btn:active { transform: scale(0.97); }
+  .today-bet-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .today-bet-btn svg { width: 16px; height: 16px; }
+
+  .today-bet-done {
+    background: linear-gradient(135deg, rgba(74,158,255,0.08), rgba(74,158,255,0.02));
+    border-color: rgba(74,158,255,0.25);
+  }
+  .today-bet-done::before {
+    background: radial-gradient(circle, rgba(74,158,255,0.15), transparent 70%);
+  }
+  .today-bet-done .today-bet-title { color: var(--blue); }
+  .today-bet-done .today-bet-amount .value { color: var(--blue); }
+
+  /* ===== Stats Grid ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent, var(--text-4));
+    opacity: 0.8;
+  }
+  .stat-card.gold { --accent: var(--gold); }
+  .stat-card.blue { --accent: var(--blue); }
+  .stat-card.green { --accent: var(--green); }
+  .stat-card.red { --accent: var(--red); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-sub {
+    font-size: 10px;
+    color: var(--text-4);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-sub.up { color: var(--green); }
+  .stat-sub.down { color: var(--red); }
+
+  /* ===== Section ===== */
+  .section {
+    margin-bottom: 18px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+  .section-title {
+    font-size: 12px;
+    color: var(--text-2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px; height: 12px;
+    background: var(--gold);
+    border-radius: 1px;
+  }
+  .section-meta {
+    font-size: 10px;
+    color: var(--text-4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===== Pending Badge ===== */
+  .pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--blue-dim);
+    color: var(--blue);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.05em;
+  }
+  .pending-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--blue);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* ===== Chart ===== */
+  .chart-wrap {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px 10px 10px;
+    position: relative;
+  }
+  .chart-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 6px 10px;
+  }
+  .chart-tab {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    color: var(--text-3);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+  .chart-tab.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .chart-canvas-box {
+    height: 220px;
+    position: relative;
+  }
+
+  /* ===== Win Rate Panel ===== */
+  .winrate-panel {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .winrate-ring {
+    position: relative;
+    width: 80px; height: 80px;
+    flex-shrink: 0;
+  }
+  .winrate-ring svg { transform: rotate(-90deg); }
+  .winrate-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .winrate-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .winrate-label {
+    font-size: 8px;
+    color: var(--text-4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .winrate-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .winrate-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .winrate-row .label { color: var(--text-3); }
+  .winrate-row .val { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .winrate-row .val.preset { color: var(--blue); }
+  .winrate-row .val.actual { color: var(--gold); }
+  .winrate-row .val.diff.up { color: var(--green); }
+  .winrate-row .val.diff.down { color: var(--red); }
+
+  /* ===== Records ===== */
+  .records-section {
+    margin-bottom: 18px;
+  }
+  .records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .record-item {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    animation: slideIn 0.3s ease-out;
+  }
+  .record-item.pending {
+    border-color: rgba(74,158,255,0.3);
+    background: linear-gradient(135deg, rgba(74,158,255,0.06), var(--card));
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .record-period {
+    flex-shrink: 0;
+    width: 42px;
+    text-align: center;
+  }
+  .record-period-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-2);
+    line-height: 1;
+  }
+  .record-period-label {
+    font-size: 8px;
+    color: var(--text-4);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+  .record-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .record-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+  }
+  .record-invest {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .record-result {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .record-result.win { color: var(--green); }
+  .record-result.lose { color: var(--red); }
+  .record-result.pending { color: var(--blue); }
+  .record-balance {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .record-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .record-tag.win { background: var(--green-dim); color: var(--green); }
+  .record-tag.lose { background: var(--red-dim); color: var(--red); }
+  .record-tag.pending { background: var(--blue-dim); color: var(--blue); }
+
+  .record-settle-btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .settle-btn {
+    flex: 1;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .settle-btn:active { transform: scale(0.95); }
+  .settle-btn.win {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(0,212,170,0.3);
+  }
+  .settle-btn.lose {
+    background: var(--red-dim);
+    color: var(--red);
+    border-color: rgba(246,70,93,0.3);
+  }
+  .settle-btn svg { width: 12px; height: 12px; }
+
+  .record-odds-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    margin-left: 2px;
+  }
+  .record-odds-edit:hover, .record-odds-edit:active {
+    background: var(--gold-dim);
+    color: var(--gold);
+  }
+  .record-odds-edit svg { width: 10px; height: 10px; }
+
+  .pending-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .pending-section-title .left {
+    font-size: 12px;
+    color: var(--blue);
+    letter-spacing: 0.12em;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pending-section-title .left::before {
+    content: '';
+    width: 3px; height: 12px;
+    background: var(--blue);
+    border-radius: 1px;
+  }
+  .pending-section-title .right {
+    font-size: 10px;
+    color: var(--text-4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-4);
+  }
+  .empty-state svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+  .empty-state-text { font-size: 12px; letter-spacing: 0.05em; }
+
+  /* ===== FAB / Action Bar ===== */
+  .action-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(180deg, rgba(10,14,26,0.85) 0%, rgba(10,14,26,0.98) 30%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 12px 14px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 50;
+    border-top: 1px solid var(--border-soft);
+  }
+  .action-bar-inner {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .action-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .action-info-label {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .action-info-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .action-btn {
+    flex: 1;
+    height: 46px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .action-btn:active { transform: scale(0.96); }
+  .action-btn.lose {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid rgba(246,70,93,0.3);
+  }
+  .action-btn.win {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(0,212,170,0.3);
+  }
+  .action-btn.primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    color: #1a1a1a;
+  }
+  .action-btn svg { width: 16px; height: 16px; }
+
+  /* ===== Modal ===== */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 15, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .modal-mask.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    padding: 20px 18px max(24px, env(safe-area-inset-bottom));
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    letter-spacing: 0.05em;
+  }
+  .modal-group {
+    margin-bottom: 16px;
+  }
+  .modal-label {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-label .hint {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .modal-input {
+    width: 100%;
+    height: 46px;
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 0 14px;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .modal-preview {
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .modal-preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  .modal-preview-row .label { color: var(--text-3); }
+  .modal-preview-row .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .modal-preview-row .val.win { color: var(--green); }
+  .modal-preview-row .val.lose { color: var(--red); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .modal-btn {
+    flex: 1;
+    height: 46px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .modal-btn:active { transform: scale(0.96); }
+  .modal-btn.cancel {
+    background: var(--bg-2);
+    color: var(--text-2);
+    border: 1px solid var(--border-soft);
+  }
+  .modal-btn.confirm {
+    background: var(--gold);
+    color: #1a1a1a;
+  }
+  .modal-btn.confirm.win { background: var(--green); color: #fff; }
+  .modal-btn.confirm.lose { background: var(--red); color: #fff; }
+  .modal-btn.danger {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid rgba(246,70,93,0.3);
+  }
+
+  .modal-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .modal-switch-btn {
+    flex: 1;
+    height: 46px;
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    background: var(--bg-2);
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .modal-switch-btn.active.win {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .modal-switch-btn.active.lose {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 12px;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* number flash animation */
+  .flash {
+    animation: flashAnim 0.6s ease-out;
+  }
+  @keyframes flashAnim {
+    0% { color: var(--gold); transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  @media (max-width: 360px) {
+    .stat-value { font-size: 16px; }
+    .capital-value { font-size: 18px; }
+    .today-bet-amount .value { font-size: 24px; }
+  }
+
+  /* ===== Simulate Modal ===== */
+  .simulate-mask {
+    align-items: stretch;
+    padding: 0;
+  }
+  .simulate-modal {
+    max-width: 480px;
+    max-height: 100vh;
+    overflow-y: auto;
+    border-radius: 0;
+    padding: 16px 14px max(24px, env(safe-area-inset-bottom));
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sim-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .sim-header .modal-title { margin-bottom: 0; }
+  .sim-close {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .sim-close:active { background: var(--card-2); }
+
+  .sim-periods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .sim-period-btn {
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    background: var(--bg-2);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .sim-period-btn.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .sim-period-btn:active { transform: scale(0.96); }
+
+  .sim-params {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .sim-param {
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sim-param-label {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sim-param-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .sim-action { margin-bottom: 16px; }
+  .sim-run-btn {
+    width: 100%;
+    height: 46px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .sim-run-btn:active { transform: scale(0.97); }
+
+  .sim-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .sim-stat-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .sim-stat-label {
+    font-size: 9px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .sim-stat-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    word-break: break-all;
+  }
+  .sim-stat-val.gold { color: var(--gold); }
+  .sim-stat-val.green { color: var(--green); }
+  .sim-stat-val.red { color: var(--red); }
+  .sim-stat-val.blue { color: var(--blue); }
+
+  .sim-section-title {
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin: 16px 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sim-section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 11px;
+    background: var(--gold);
+    border-radius: 1px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .sim-section-title > span:first-child { display: flex; align-items: center; }
+  .sim-detail-meta {
+    font-size: 10px;
+    color: var(--text-4);
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .sim-chart-wrap {
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 10px;
+    height: 200px;
+    position: relative;
+  }
+
+  .sim-detail-list {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: var(--bg-2);
+  }
+  .sim-detail-list::-webkit-scrollbar { width: 4px; }
+  .sim-detail-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .sim-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 11px;
+  }
+  .sim-detail-row:last-child { border-bottom: none; }
+  .sim-detail-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--text-2);
+    width: 44px;
+    flex-shrink: 0;
+  }
+  .sim-detail-invest {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-3);
+    flex: 1;
+    min-width: 0;
+  }
+  .sim-detail-result {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .sim-detail-result.win { background: var(--green-dim); color: var(--green); }
+  .sim-detail-result.lose { background: var(--red-dim); color: var(--red); }
+  .sim-detail-balance {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    font-size: 10px;
+    width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div>
+          <div class="brand-title display">REALM LEDGER</div>
+          <div class="brand-sub">领地经营台</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btnSimulate" title="推演">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+        </button>
+        <button class="icon-btn" id="btnReset" title="重置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="capital-bar">
+      <div>
+        <div class="capital-label">可用库存 TREASURY</div>
+        <div class="capital-value mono" id="capitalDisplay">10,000.00</div>
+      </div>
+      <button class="capital-edit" id="btnEditCapital">设置储备金</button>
+    </div>
+  </div>
+
+  <!-- Today's Bet Card -->
+  <div class="today-bet-card" id="todayBetCard">
+    <div class="today-bet-header">
+      <div class="today-bet-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        今日派遣建议
+      </div>
+      <div class="today-bet-date" id="todayDate">--</div>
+    </div>
+    <div class="today-bet-amount">
+      <span class="label">建议派遣</span>
+      <span class="value mono" id="todayBetAmount">--</span>
+      <span class="unit">金币</span>
+    </div>
+    <div class="today-bet-info">
+      <div class="today-bet-info-item">
+        <div class="lbl">资源配比</div>
+        <div class="val mono" id="todayBetRatio">3%</div>
+      </div>
+      <div class="today-bet-info-item">
+        <div class="lbl">当前库存</div>
+        <div class="val mono" id="todayBetBalance">--</div>
+      </div>
+    </div>
+    <button class="today-bet-btn" id="btnPlaceBet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      立即派遣
+    </button>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card gold">
+      <div class="stat-label">总远征</div>
+      <div class="stat-value gold mono" id="statBalance">10,000.00</div>
+      <div class="stat-sub" id="statBalanceSub">含远征中</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">远征中</div>
+      <div class="stat-value mono" id="statPending">0.00</div>
+      <div class="stat-sub" id="statPendingSub">0 队</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">总收获</div>
+      <div class="stat-value green mono" id="statTotalIncome">0.00</div>
+      <div class="stat-sub" id="statTotalIncomeSub">未开始</div>
+    </div>
+    <div class="stat-card" id="statProfitCard">
+      <div class="stat-label">净收获 / 收获率</div>
+      <div class="stat-value mono" id="statProfit">0.00</div>
+      <div class="stat-sub" id="statProfitRate">收获率 0.00%</div>
+    </div>
+  </div>
+
+  <!-- Win Rate Panel -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">凯旋率分析</div>
+      <div class="section-meta" id="winrateMeta">预设 58%</div>
+    </div>
+    <div class="winrate-panel">
+      <div class="winrate-ring">
+        <svg width="80" height="80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border-soft)" stroke-width="6"/>
+          <circle id="winRateArc" cx="40" cy="40" r="34" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 213.6" style="transition: stroke-dasharray 0.6s ease-out;"/>
+        </svg>
+        <div class="winrate-ring-text">
+          <div class="winrate-num mono" id="winRateNum">--</div>
+          <div class="winrate-label">实测</div>
+        </div>
+      </div>
+      <div class="winrate-info">
+        <div class="winrate-row">
+          <span class="label">预设凯旋率</span>
+          <span class="val preset mono" id="presetRate">58.00%</span>
+        </div>
+        <div class="winrate-row">
+          <span class="label">实际凯旋率</span>
+          <span class="val actual mono" id="actualRate">0 / 0</span>
+        </div>
+        <div class="winrate-row">
+          <span class="label">偏差</span>
+          <span class="val diff mono" id="rateDiff">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">资源走势</div>
+      <div class="section-meta" id="chartMeta">--</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-tabs">
+        <button class="chart-tab active" data-chart="balance">远征</button>
+        <button class="chart-tab" data-chart="cumulative">派遣/收获</button>
+        <button class="chart-tab" data-chart="profit">净收获</button>
+      </div>
+      <div class="chart-canvas-box">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Bets -->
+  <div class="records-section" id="pendingSection" style="display:none;">
+    <div class="pending-section-title">
+      <div class="left">远征中资源</div>
+      <div class="right" id="pendingMeta">0 队</div>
+    </div>
+    <div class="records-list" id="pendingList"></div>
+  </div>
+
+  <!-- Records -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">远征档案</div>
+      <div class="section-meta" id="recordsMeta">0 条战报</div>
+    </div>
+    <div class="records-list" id="recordsList">
+      <div class="empty-state" id="emptyState">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/>
+        </svg>
+        <div class="empty-state-text">点击上方「立即派遣」开始</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
+  <div class="action-bar-inner">
+    <div class="action-info">
+      <div class="action-info-label">远征中资源</div>
+      <div class="action-info-value mono" id="actionBarPending">0 队 · 0.00 金币</div>
+    </div>
+    <button class="action-btn primary" id="btnQuickBet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      快速派遣
+    </button>
+  </div>
+</div>
+
+<!-- Place Bet Modal -->
+<div class="modal-mask" id="placeBetModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">确认派遣</div>
+
+    <div class="modal-preview">
+      <div class="modal-preview-row">
+        <span class="label">派遣资源</span>
+        <span class="val mono" id="placeBetAmount" style="color:var(--gold)">--</span>
+      </div>
+      <div class="modal-preview-row">
+        <span class="label">资源配比</span>
+        <span class="val mono" id="placeBetRatio">--</span>
+      </div>
+      <div class="modal-preview-row">
+        <span class="label">当前库存</span>
+        <span class="val mono" id="placeBetBalance">--</span>
+      </div>
+      <div class="modal-preview-row" style="border-top:1px solid var(--border-soft);margin-top:8px;padding-top:8px;">
+        <span class="label">派遣后库存</span>
+        <span class="val mono lose" id="placeBetAfter">--</span>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text-3);line-height:1.6;margin-bottom:16px;">
+      派遣后资源将从库存中扣除，待远征结束后点击「凯旋」或「折损」结算。
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="btnCancelPlaceBet">取消</button>
+      <button class="modal-btn confirm" id="btnConfirmPlaceBet">确认派遣</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settle Modal -->
+<div class="modal-mask" id="settleModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="settleModalTitle">战报结算</div>
+
+    <div class="modal-group">
+      <div class="modal-label">本轮战果</div>
+      <div class="modal-switch">
+        <button class="modal-switch-btn" id="settleSwitchWin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>
+          凯旋
+        </button>
+        <button class="modal-switch-btn" id="settleSwitchLose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          折损
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-group" id="settleOddsGroup">
+      <div class="modal-label">
+        <span>奖励倍率</span>
+        <span class="hint" id="settleOddsHint">默认 2.0</span>
+      </div>
+      <input type="number" class="modal-input mono" id="settleInputOdds" value="2.0" step="0.01" min="1" inputmode="decimal">
+    </div>
+
+    <div class="modal-preview">
+      <div class="modal-preview-row">
+        <span class="label">派遣资源</span>
+        <span class="val mono" id="settlePreviewInvest">--</span>
+      </div>
+      <div class="modal-preview-row" id="settlePreviewIncomeRow">
+        <span class="label">预计收获</span>
+        <span class="val win mono" id="settlePreviewIncome">--</span>
+      </div>
+      <div class="modal-preview-row">
+        <span class="label">结算后库存</span>
+        <span class="val mono" id="settlePreviewBalance">--</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="btnCancelSettle">取消</button>
+      <button class="modal-btn confirm" id="btnConfirmSettle">确认战报</button>
+    </div>
+  </div>
+</div>
+
+<!-- Capital Modal -->
+<div class="modal-mask" id="capitalModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">设置储备金</div>
+    <div class="modal-group">
+      <div class="modal-label">储备金额</div>
+      <input type="number" class="modal-input mono" id="inputCapital" value="10000" step="100" min="1" inputmode="decimal">
+    </div>
+    <div class="modal-group">
+      <div class="modal-label">
+        <span>每日资源配比</span>
+        <span class="hint">默认 3%</span>
+      </div>
+      <input type="number" class="modal-input mono" id="inputRatio" value="3" step="0.5" min="0.1" max="100" inputmode="decimal">
+    </div>
+    <div class="modal-group">
+      <div class="modal-label">
+        <span>预设凯旋率</span>
+        <span class="hint">默认 58%</span>
+      </div>
+      <input type="number" class="modal-input mono" id="inputPresetRate" value="58" step="1" min="0" max="100" inputmode="decimal">
+    </div>
+    <div class="modal-group">
+      <div class="modal-label">
+        <span>默认倍率</span>
+        <span class="hint">固定 2.0</span>
+      </div>
+      <input type="number" class="modal-input mono" id="inputOddsSetting" value="2.0" step="0.01" min="1" inputmode="decimal">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="btnCancelCapital">取消</button>
+      <button class="modal-btn confirm" id="btnConfirmCapital">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal-mask" id="resetModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">重置领地</div>
+    <div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:18px;">
+      此操作将清空所有派遣战报和远征中资源，并将库存重置为储备金。<br>
+      <span style="color:var(--red)">该操作不可撤销。</span>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="btnCancelReset">取消</button>
+      <button class="modal-btn danger" id="btnConfirmReset">确认重置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Record Modal -->
+<div class="modal-mask" id="editOddsModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editOddsTitle">编辑战报</div>
+
+    <div class="modal-group">
+      <div class="modal-label">本轮战果</div>
+      <div class="modal-switch">
+        <button class="modal-switch-btn" id="editSwitchWin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>
+          凯旋
+        </button>
+        <button class="modal-switch-btn" id="editSwitchLose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          折损
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-group" id="editOddsGroup">
+      <div class="modal-label">
+        <span>奖励倍率</span>
+        <span class="hint mono" id="editOddsOriginal">--</span>
+      </div>
+      <input type="number" class="modal-input mono" id="editOddsInput" value="2.0" step="0.01" min="1" inputmode="decimal">
+    </div>
+
+    <div class="modal-preview">
+      <div class="modal-preview-row">
+        <span class="label">派遣资源</span>
+        <span class="val mono" id="editOddsInvest">--</span>
+      </div>
+      <div class="modal-preview-row">
+        <span class="label">原收获</span>
+        <span class="val mono" id="editOddsOldIncome">--</span>
+      </div>
+      <div class="modal-preview-row" style="border-top:1px solid var(--border-soft);margin-top:6px;padding-top:6px;">
+        <span class="label">新收获</span>
+        <span class="val win mono" id="editOddsNewIncome">--</span>
+      </div>
+      <div class="modal-preview-row">
+        <span class="label">差额</span>
+        <span class="val mono" id="editOddsDiff">--</span>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text-3);line-height:1.6;margin-bottom:16px;">
+      修改后，该战报及之后所有战报的库存将自动重新计算。
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="btnCancelEditOdds">取消</button>
+      <button class="modal-btn confirm" id="btnConfirmEditOdds">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- Simulate Modal -->
+<div class="modal-mask simulate-mask" id="simulateModal">
+  <div class="modal simulate-modal">
+    <div class="modal-handle"></div>
+    <div class="sim-header">
+      <div class="modal-title">未来推演</div>
+      <button class="sim-close" id="btnCloseSimulate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="sim-periods">
+      <button class="sim-period-btn" data-period="20">20轮</button>
+      <button class="sim-period-btn" data-period="50">50轮</button>
+      <button class="sim-period-btn" data-period="100">100轮</button>
+      <button class="sim-period-btn" data-period="200">200轮</button>
+      <button class="sim-period-btn" data-period="365">365轮</button>
+      <button class="sim-period-btn" data-period="730">730轮</button>
+    </div>
+
+    <div class="sim-params">
+      <div class="sim-param">
+        <span class="sim-param-label">起始远征</span>
+        <span class="sim-param-val mono" id="simStartBalance">--</span>
+      </div>
+      <div class="sim-param">
+        <span class="sim-param-label">使用凯旋率</span>
+        <span class="sim-param-val mono" id="simUseRate">--</span>
+      </div>
+      <div class="sim-param">
+        <span class="sim-param-label">倍率</span>
+        <span class="sim-param-val mono" id="simUseOdds">2.00</span>
+      </div>
+      <div class="sim-param">
+        <span class="sim-param-label">资源配比</span>
+        <span class="sim-param-val mono" id="simUseRatio">3%</span>
+      </div>
+    </div>
+
+    <div class="sim-action">
+      <button class="sim-run-btn" id="btnRunSimulate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        开始推演
+      </button>
+    </div>
+
+    <div id="simResult" style="display:none;">
+      <div class="sim-stats-grid">
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">推演后库存</div>
+          <div class="sim-stat-val mono gold" id="simEndBalance">--</div>
+        </div>
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">总派遣</div>
+          <div class="sim-stat-val mono blue" id="simTotalInvest">--</div>
+        </div>
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">总收获</div>
+          <div class="sim-stat-val mono green" id="simTotalIncome">--</div>
+        </div>
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">净收获</div>
+          <div class="sim-stat-val mono" id="simProfit">--</div>
+        </div>
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">收获率</div>
+          <div class="sim-stat-val mono" id="simProfitRate">--</div>
+        </div>
+        <div class="sim-stat-card">
+          <div class="sim-stat-label">实际凯旋率</div>
+          <div class="sim-stat-val mono" id="simActualRate">--</div>
+        </div>
+      </div>
+
+      <div class="sim-section-title">资源走势</div>
+      <div class="sim-chart-wrap">
+        <canvas id="simChart"></canvas>
+      </div>
+
+      <div class="sim-section-title">
+        <span>凯旋明细</span>
+        <span class="sim-detail-meta" id="simDetailMeta">--</span>
+      </div>
+      <div class="sim-detail-list" id="simDetailList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ State ============ */
+const STORE_KEY = 'bet_ledger_state_v2';
+const defaultState = {
+  capital: 10000,
+  ratio: 3,          // 每日资源配比 %
+  presetRate: 58,    // 预设凯旋率 %
+  defaultOdds: 2.0, // 默认倍率
+  pendingBets: [],   // {id, period, invest, time} 远征中派遣
+  records: []        // {id, period, invest, hit, odds, income, balanceAfter, time} 已结算战报
+};
+
+let state = loadState();
+
+function loadState() {
+  let loaded = null;
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) loaded = { ...defaultState, ...JSON.parse(raw) };
+  } catch(e) {}
+  // 尝试从旧版本迁移
+  if (!loaded) {
+    try {
+      const oldRaw = localStorage.getItem('bet_ledger_state_v1');
+      if (oldRaw) {
+        const oldState = JSON.parse(oldRaw);
+        loaded = {
+          ...defaultState,
+          capital: oldState.capital || 10000,
+          ratio: oldState.ratio || 3,
+          presetRate: oldState.presetRate || 58,
+          defaultOdds: oldState.defaultOdds || 2.0,
+          records: oldState.records || []
+        };
+      }
+    } catch(e) {}
+  }
+  if (!loaded) loaded = { ...defaultState };
+
+  // 确保战报按派遣时间排序
+  if (loaded.records && loaded.records.length > 0) {
+    loaded.records.sort((a, b) => a.time - b.time);
+  }
+  return loaded;
+}
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+/* ============ Helpers ============ */
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt0 = n => Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 0 });
+
+function showToast(msg, type='') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 1800);
+}
+
+/* ============ Derived data ============ */
+function availableBalance() {
+  // 可用库存 = 储备金 + 已结算收获/折损 - 远征中派遣资源
+  const inv = totalInvest();
+  const inc = totalIncome();
+  const pending = pendingInvestTotal();
+  return state.capital + inc - inv - pending;
+}
+
+function totalBalance() {
+  // 总远征 = 可用库存 + 远征中派遣资源
+  return availableBalance() + pendingInvestTotal();
+}
+
+function pendingInvestTotal() {
+  return state.pendingBets.reduce((s, b) => s + b.invest, 0);
+}
+
+function totalInvest() {
+  return state.records.reduce((s, r) => s + r.invest, 0);
+}
+function totalIncome() {
+  return state.records.reduce((s, r) => s + r.income, 0);
+}
+function winCount() {
+  return state.records.filter(r => r.hit).length;
+}
+function actualRate() {
+  if (state.records.length === 0) return null;
+  return (winCount() / state.records.length) * 100;
+}
+function nextInvest() {
+  // 向下取整
+  const raw = availableBalance() * (state.ratio / 100);
+  return Math.max(1, Math.floor(raw));
+}
+
+function nextPeriod() {
+  // 下一轮编号 = 已结算战报数 + 远征中数 + 1
+  return state.records.length + state.pendingBets.length + 1;
+}
+
+/* ============ Render ============ */
+function renderAll() {
+  renderCapital();
+  renderTodayBet();
+  renderStats();
+  renderWinRate();
+  renderPendingList();
+  renderRecords();
+  renderActionBar();
+  updateChart();
+}
+
+function renderCapital() {
+  $('capitalDisplay').textContent = fmt(availableBalance());
+}
+
+function renderTodayBet() {
+  const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' });
+  $('todayDate').textContent = today;
+  $('todayBetAmount').textContent = fmt(nextInvest());
+  $('todayBetRatio').textContent = state.ratio + '%';
+  $('todayBetBalance').textContent = fmt(availableBalance());
+
+  const card = $('todayBetCard');
+  const btn = $('btnPlaceBet');
+
+  card.classList.remove('today-bet-done');
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    立即派遣
+  `;
+  btn.disabled = availableBalance() <= 0;
+}
+
+function renderStats() {
+  const bal = totalBalance();
+  const pending = pendingInvestTotal();
+  const inc = totalIncome();
+  const inv = totalInvest();
+  const profit = inc - inv;
+  const profitRate = state.capital > 0 ? (profit / state.capital) * 100 : 0;
+
+  $('statBalance').textContent = fmt(bal);
+  $('statBalanceSub').textContent = `可用 ${fmt(availableBalance())}`;
+
+  $('statPending').textContent = fmt(pending);
+  $('statPendingSub').textContent = `${state.pendingBets.length} 队`;
+
+  $('statTotalIncome').textContent = fmt(inc);
+  $('statTotalIncomeSub').textContent = state.records.length
+    ? `${winCount()} 次凯旋`
+    : '未开始';
+
+  const profitEl = $('statProfit');
+  profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
+  profitEl.className = 'stat-value mono ' + (profit >= 0 ? 'green' : 'red');
+
+  const rateEl = $('statProfitRate');
+  rateEl.textContent = `收获率 ${profitRate >= 0 ? '+' : ''}${profitRate.toFixed(2)}%`;
+  rateEl.className = 'stat-sub ' + (profit >= 0 ? 'up' : 'down');
+
+  const card = $('statProfitCard');
+  card.className = 'stat-card ' + (profit >= 0 ? 'green' : 'red');
+}
+
+function renderWinRate() {
+  const preset = state.presetRate;
+  const actual = actualRate();
+  const win = winCount();
+  const total = state.records.length;
+
+  $('presetRate').textContent = preset.toFixed(2) + '%';
+  $('actualRate').textContent = `${win} / ${total}` + (actual !== null ? `  (${actual.toFixed(1)}%)` : '');
+  $('winrateMeta').textContent = `预设 ${preset}%`;
+
+  const numEl = $('winRateNum');
+  const arcEl = $('winRateArc');
+  if (actual === null) {
+    numEl.textContent = '--';
+    arcEl.setAttribute('stroke-dasharray', `0 213.6`);
+    arcEl.setAttribute('stroke', 'var(--text-4)');
+  } else {
+    numEl.textContent = actual.toFixed(0) + '%';
+    const circ = 2 * Math.PI * 34;
+    const dash = (actual / 100) * circ;
+    arcEl.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+    arcEl.setAttribute('stroke', actual >= preset ? 'var(--green)' : 'var(--red)');
+    numEl.style.color = actual >= preset ? 'var(--green)' : 'var(--red)';
+  }
+
+  const diffEl = $('rateDiff');
+  if (actual === null) {
+    diffEl.textContent = '--';
+    diffEl.className = 'val diff mono';
+  } else {
+    const diff = actual - preset;
+    diffEl.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + '%';
+    diffEl.className = 'val diff mono ' + (diff >= 0 ? 'up' : 'down');
+  }
+}
+
+function renderPendingList() {
+  const section = $('pendingSection');
+  const list = $('pendingList');
+  const meta = $('pendingMeta');
+
+  if (state.pendingBets.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  meta.textContent = `${state.pendingBets.length} 队 · ${fmt(pendingInvestTotal())} 金币`;
+
+  list.innerHTML = '';
+  // 最新的排前面
+  const bets = [...state.pendingBets].reverse();
+  bets.forEach(b => {
+    const dateStr = new Date(b.time).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const item = document.createElement('div');
+    item.className = 'record-item pending';
+    item.innerHTML = `
+      <div class="record-period">
+        <div class="record-period-num">#${b.period}</div>
+        <div class="record-period-label">ROUND</div>
+      </div>
+      <div class="record-main">
+        <div class="record-row">
+          <span class="record-invest">派 ${fmt(b.invest)}</span>
+          <span class="record-result pending">远征中</span>
+        </div>
+        <div class="record-row">
+          <span class="record-balance">${dateStr}</span>
+          <span class="record-tag pending">远征中</span>
+        </div>
+        <div class="record-settle-btns">
+          <button class="settle-btn win" data-id="${b.id}" data-action="win">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            凯旋
+          </button>
+          <button class="settle-btn lose" data-id="${b.id}" data-action="lose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            折损
+          </button>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  // Bind settle buttons
+  list.querySelectorAll('.settle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.id);
+      const isWin = btn.dataset.action === 'win';
+      openSettleModal(id, isWin);
+    });
+  });
+}
+
+function renderRecords() {
+  const list = $('recordsList');
+  const empty = $('emptyState');
+  $('recordsMeta').textContent = `${state.records.length} 条战报`;
+
+  if (state.records.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(empty);
+    return;
+  }
+
+  list.innerHTML = '';
+  // 最新的排前面
+  const records = [...state.records].reverse();
+  records.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'record-item';
+    const dateStr = new Date(r.time).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const oddsEditHtml = `
+      <span class="record-odds-edit" data-id="${r.id}" title="编辑战报">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        倍率 ${r.odds.toFixed(2)}
+      </span>
+    `;
+    item.innerHTML = `
+      <div class="record-period">
+        <div class="record-period-num">#${r.period}</div>
+        <div class="record-period-label">ROUND</div>
+      </div>
+      <div class="record-main">
+        <div class="record-row">
+          <span class="record-invest">派 ${fmt(r.invest)}</span>
+          <span class="record-result ${r.hit ? 'win' : 'lose'}">${r.hit ? '+' + fmt(r.income) : '×'}</span>
+        </div>
+        <div class="record-row">
+          <span class="record-balance">${dateStr} · ${oddsEditHtml}</span>
+          <span class="record-tag ${r.hit ? 'win' : 'lose'}">${r.hit ? '凯旋' : '折损'}</span>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  // Bind edit buttons
+  list.querySelectorAll('.record-odds-edit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      openEditRecordModal(id);
+    });
+  });
+}
+
+function renderActionBar() {
+  const pendingCount = state.pendingBets.length;
+  const pendingAmount = pendingInvestTotal();
+  if (pendingCount > 0) {
+    $('actionBarPending').textContent = `${pendingCount} 队 · ${fmt(pendingAmount)} 金币`;
+  } else {
+    $('actionBarPending').textContent = '暂无远征';
+  }
+}
+
+/* ============ Chart ============ */
+let chart = null;
+let chartMode = 'balance';
+
+function getChartData() {
+  const labels = ['初始'];
+  const balanceData = [state.capital];
+  const investData = [0];
+  const incomeData = [0];
+
+  let cumInv = 0, cumInc = 0;
+  state.records.forEach(r => {
+    labels.push('#' + r.period);
+    balanceData.push(r.balanceAfter);
+    cumInv += r.invest;
+    cumInc += r.income;
+    investData.push(cumInv);
+    incomeData.push(cumInc);
+  });
+
+  if (chartMode === 'balance') {
+    return { labels, datasets: [
+      { label: '远征', data: balanceData, borderColor: '#f0b90b', bgColor: 'rgba(240,185,11,0.12)' }
+    ]};
+  }
+  if (chartMode === 'cumulative') {
+    return { labels, datasets: [
+      { label: '累计派遣', data: investData, borderColor: '#4a9eff', bgColor: 'rgba(74,158,255,0.12)' },
+      { label: '累计收获', data: incomeData, borderColor: '#00d4aa', bgColor: 'rgba(0,212,170,0.12)' }
+    ]};
+  }
+  // profit
+  const profitData = balanceData.map((b, i) => b - state.capital);
+  return { labels, datasets: [
+    { label: '净收获', data: profitData, borderColor: '#00d4aa', bgColor: 'rgba(0,212,170,0.12)' }
+  ]};
+}
+
+function updateChart() {
+  const { labels, datasets } = getChartData();
+  $('chartMeta').textContent = state.records.length
+    ? `第 ${state.records.length} 轮`
+    : '等待情报';
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets = datasets.map(ds => ({
+      ...ds,
+      backgroundColor: ds.bgColor,
+      fill: true,
+      tension: 0.35,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      pointHoverBackgroundColor: ds.borderColor,
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2
+    }));
+    chart.update('none');
+    return;
+  }
+
+  const ctx = $('mainChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: datasets.map(ds => ({
+        ...ds,
+        backgroundColor: ds.bgColor,
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: ds.borderColor,
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: datasets.length > 1,
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: '#848e9c',
+            font: { size: 10, family: "'JetBrains Mono', monospace" },
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 8,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(19,24,41,0.95)',
+          borderColor: '#252c45',
+          borderWidth: 1,
+          titleColor: '#eaecef',
+          bodyColor: '#b7bdc6',
+          titleFont: { size: 11, family: "'Oswald', sans-serif" },
+          bodyFont: { size: 11, family: "'JetBrains Mono', monospace" },
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: true,
+          boxPadding: 4,
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(37,44,69,0.4)', drawTicks: false },
+          border: { display: false },
+          ticks: { color: '#5e6673', font: { size: 9, family: "'JetBrains Mono', monospace" }, maxRotation: 0, autoSkipPadding: 16 }
+        },
+        y: {
+          grid: { color: 'rgba(37,44,69,0.4)', drawTicks: false },
+          border: { display: false },
+          ticks: {
+            color: '#5e6673',
+            font: { size: 9, family: "'JetBrains Mono', monospace" },
+            callback: (v) => {
+              if (Math.abs(v) >= 1000) return (v/1000).toFixed(1) + 'k';
+              return v.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ============ Place Bet Modal ============ */
+function openPlaceBetModal() {
+  const invest = nextInvest();
+  const bal = availableBalance();
+
+  $('placeBetAmount').textContent = fmt(invest);
+  $('placeBetRatio').textContent = state.ratio + '%';
+  $('placeBetBalance').textContent = fmt(bal);
+  $('placeBetAfter').textContent = fmt(bal - invest);
+
+  $('placeBetModal').classList.add('show');
+}
+
+function closePlaceBetModal() {
+  $('placeBetModal').classList.remove('show');
+}
+
+function confirmPlaceBet() {
+  const invest = nextInvest();
+  const bal = availableBalance();
+
+  if (bal < invest) {
+    showToast('库存不足', 'error');
+    return;
+  }
+  if (invest <= 0) {
+    showToast('派遣资源需 > 0', 'error');
+    return;
+  }
+
+  const period = nextPeriod();
+  state.pendingBets.push({
+    id: Date.now(),
+    period,
+    invest,
+    time: Date.now()
+  });
+  saveState();
+  closePlaceBetModal();
+  renderAll();
+  showToast(`派遣成功！${fmt(invest)} 金币`, 'success');
+}
+
+/* ============ Settle Modal ============ */
+let settleBetId = null;
+let settleHit = null;
+
+function openSettleModal(betId, hit) {
+  const bet = state.pendingBets.find(b => b.id === betId);
+  if (!bet) return;
+
+  settleBetId = betId;
+  settleHit = hit;
+
+  $('settleModalTitle').textContent = `结算第 ${bet.period} 轮`;
+  $('settleSwitchWin').className = 'modal-switch-btn' + (hit ? ' active win' : '');
+  $('settleSwitchLose').className = 'modal-switch-btn' + (!hit ? ' active lose' : '');
+  $('settleOddsGroup').style.display = hit ? '' : 'none';
+  $('settlePreviewIncomeRow').style.display = hit ? '' : 'none';
+  $('btnConfirmSettle').className = 'modal-btn confirm ' + (hit ? 'win' : 'lose');
+  $('btnConfirmSettle').textContent = hit ? '确认凯旋' : '确认折损';
+
+  if (hit) {
+    $('settleInputOdds').value = state.defaultOdds;
+  }
+
+  updateSettlePreview();
+  $('settleModal').classList.add('show');
+}
+
+function closeSettleModal() {
+  $('settleModal').classList.remove('show');
+  settleBetId = null;
+  settleHit = null;
+}
+
+function updateSettlePreview() {
+  const bet = state.pendingBets.find(b => b.id === settleBetId);
+  if (!bet) return;
+
+  const bal = availableBalance();
+  $('settlePreviewInvest').textContent = fmt(bet.invest);
+
+  if (settleHit === true) {
+    const odds = parseFloat($('settleInputOdds').value) || state.defaultOdds;
+    const income = bet.invest * odds;
+    $('settlePreviewIncome').textContent = '+' + fmt(income);
+    const afterBal = bal + income;
+    $('settlePreviewBalance').textContent = fmt(afterBal);
+    $('settlePreviewBalance').className = 'val mono ' + (income >= bet.invest ? 'win' : 'lose');
+  } else {
+    $('settlePreviewBalance').textContent = fmt(bal);
+    $('settlePreviewBalance').className = 'val mono lose';
+  }
+}
+
+function confirmSettle() {
+  if (settleBetId === null || settleHit === null) return;
+
+  const betIndex = state.pendingBets.findIndex(b => b.id === settleBetId);
+  if (betIndex === -1) return;
+
+  const bet = state.pendingBets[betIndex];
+  let income = 0, odds = 0;
+
+  if (settleHit) {
+    odds = parseFloat($('settleInputOdds').value) || state.defaultOdds;
+    if (odds < 1) { showToast('倍率需 ≥ 1', 'error'); return; }
+    income = bet.invest * odds;
+  }
+
+  // 从远征中移除
+  state.pendingBets.splice(betIndex, 1);
+
+  // 添加到已结算战报，保留原始派遣时间
+  const newRecord = {
+    id: Date.now(),
+    period: bet.period,
+    invest: bet.invest,
+    hit: settleHit,
+    odds,
+    income,
+    balanceAfter: 0, // 占位，后面统一重算
+    time: bet.time
+  };
+  state.records.push(newRecord);
+
+  // 按派遣时间排序
+  state.records.sort((a, b) => a.time - b.time);
+
+  // 找到新战报的位置，从那里开始重算所有后续库存
+  const newIndex = state.records.findIndex(r => r.id === newRecord.id);
+  recalculateBalances(newIndex);
+
+  saveState();
+  closeSettleModal();
+  renderAll();
+  showToast(settleHit ? `凯旋！+${fmt(income)}` : '已记录折损', settleHit ? 'success' : '');
+}
+
+/* ============ Capital Modal ============ */
+function openCapitalModal() {
+  $('inputCapital').value = state.capital;
+  $('inputRatio').value = state.ratio;
+  $('inputPresetRate').value = state.presetRate;
+  $('inputOddsSetting').value = state.defaultOdds;
+  $('capitalModal').classList.add('show');
+}
+function closeCapitalModal() {
+  $('capitalModal').classList.remove('show');
+}
+function confirmCapital() {
+  const cap = parseFloat($('inputCapital').value);
+  const ratio = parseFloat($('inputRatio').value);
+  const rate = parseFloat($('inputPresetRate').value);
+  const odds = parseFloat($('inputOddsSetting').value);
+  if (!cap || cap <= 0) { showToast('储备金需 > 0', 'error'); return; }
+  if (!ratio || ratio <= 0 || ratio > 100) { showToast('配比需在 0~100', 'error'); return; }
+  if (isNaN(rate) || rate < 0 || rate > 100) { showToast('凯旋率需在 0~100', 'error'); return; }
+  if (!odds || odds < 1) { showToast('倍率需 ≥ 1', 'error'); return; }
+
+  state.capital = cap;
+  state.ratio = ratio;
+  state.presetRate = rate;
+  state.defaultOdds = odds;
+  saveState();
+  closeCapitalModal();
+  renderAll();
+  showToast('设置已生效', 'success');
+}
+
+/* ============ Reset ============ */
+function confirmReset() {
+  state.records = [];
+  state.pendingBets = [];
+  saveState();
+  $('resetModal').classList.remove('show');
+  renderAll();
+  showToast('领地已重置', 'success');
+}
+
+/* ============ Edit Record ============ */
+let editRecordId = null;
+let editHit = null;
+
+function openEditRecordModal(recordId) {
+  const record = state.records.find(r => r.id === recordId);
+  if (!record) return;
+
+  editRecordId = recordId;
+  editHit = record.hit;
+
+  $('editOddsTitle').textContent = `编辑第 ${record.period} 轮`;
+  $('editOddsOriginal').textContent = record.odds.toFixed(2);
+  $('editOddsInput').value = record.odds.toFixed(2);
+  $('editOddsInvest').textContent = fmt(record.invest);
+  $('editOddsOldIncome').textContent = record.hit ? '+' + fmt(record.income) : '0.00';
+
+  // Set switch state
+  $('editSwitchWin').className = 'modal-switch-btn' + (record.hit ? ' active win' : '');
+  $('editSwitchLose').className = 'modal-switch-btn' + (!record.hit ? ' active lose' : '');
+  $('editOddsGroup').style.display = record.hit ? '' : 'none';
+
+  updateEditRecordPreview();
+  $('editOddsModal').classList.add('show');
+}
+
+function closeEditRecordModal() {
+  $('editOddsModal').classList.remove('show');
+  editRecordId = null;
+  editHit = null;
+}
+
+function updateEditRecordPreview() {
+  const record = state.records.find(r => r.id === editRecordId);
+  if (!record) return;
+
+  let newIncome = 0;
+  if (editHit) {
+    const newOdds = parseFloat($('editOddsInput').value) || 0;
+    newIncome = record.invest * newOdds;
+  }
+
+  const oldIncome = record.income;
+  const diff = newIncome - oldIncome;
+
+  const newIncomeEl = $('editOddsNewIncome');
+  newIncomeEl.textContent = (newIncome >= 0 ? '+' : '') + fmt(newIncome);
+  newIncomeEl.className = 'val mono ' + (editHit ? (newIncome >= record.invest ? 'win' : 'lose') : 'lose');
+
+  const diffEl = $('editOddsDiff');
+  diffEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
+  diffEl.className = 'val mono ' + (diff >= 0 ? 'win' : 'lose');
+}
+
+function recalculateBalances(fromIndex) {
+  // 从 fromIndex 开始重新计算所有战报的 balanceAfter
+  let prevBalance;
+  if (fromIndex === 0) {
+    prevBalance = state.capital;
+  } else {
+    prevBalance = state.records[fromIndex - 1].balanceAfter;
+  }
+
+  for (let i = fromIndex; i < state.records.length; i++) {
+    const r = state.records[i];
+    // 重新计算该战报的 income（只有凯旋的才受倍率影响）
+    if (r.hit) {
+      r.income = r.invest * r.odds;
+    } else {
+      r.income = 0;
+    }
+    r.balanceAfter = prevBalance - r.invest + r.income;
+    prevBalance = r.balanceAfter;
+  }
+}
+
+function confirmEditRecord() {
+  if (editRecordId === null) return;
+
+  const recordIndex = state.records.findIndex(r => r.id === editRecordId);
+  if (recordIndex === -1) return;
+
+  const record = state.records[recordIndex];
+  const newOdds = parseFloat($('editOddsInput').value);
+
+  if (editHit && (!newOdds || newOdds < 1)) {
+    showToast('倍率需 ≥ 1', 'error');
+    return;
+  }
+
+  // 检查是否有变化
+  const hitChanged = editHit !== record.hit;
+  const oddsChanged = editHit && newOdds !== record.odds;
+  if (!hitChanged && !oddsChanged) {
+    showToast('战报无变化', '');
+    closeEditRecordModal();
+    return;
+  }
+
+  // 更新战报
+  record.hit = editHit;
+  if (editHit) {
+    record.odds = newOdds;
+    record.income = record.invest * newOdds;
+  } else {
+    record.income = 0;
+    // 倍率保留原值，便于后续切换回凯旋时恢复
+  }
+
+  // 重新计算该战报及之后所有战报的库存
+  recalculateBalances(recordIndex);
+
+  saveState();
+  closeEditRecordModal();
+  renderAll();
+  showToast('战报已更新', 'success');
+}
+
+/* ============ Simulate ============ */
+let simChart = null;
+let simPeriod = 20;
+
+function getSimRate() {
+  const actual = actualRate();
+  return actual !== null ? actual : state.presetRate;
+}
+
+function openSimulateModal() {
+  $('simStartBalance').textContent = fmt(totalBalance());
+  const rate = getSimRate();
+  $('simUseRate').textContent = rate.toFixed(2) + '%' + (actualRate() !== null ? ' (实际)' : ' (预设)');
+  $('simUseOdds').textContent = state.defaultOdds.toFixed(2);
+  $('simUseRatio').textContent = state.ratio + '%';
+  $('simResult').style.display = 'none';
+  if (simChart) { simChart.destroy(); simChart = null; }
+  $('simulateModal').classList.add('show');
+}
+
+function closeSimulateModal() {
+  $('simulateModal').classList.remove('show');
+}
+
+function runSimulate() {
+  const n = simPeriod;
+  const rate = getSimRate();
+  const odds = state.defaultOdds;
+  const ratio = state.ratio / 100;
+
+  const startBal = totalBalance();
+  const baseInvest = totalInvest();
+  const baseIncome = totalIncome();
+  const startPeriod = state.records.length + state.pendingBets.length;
+
+  let bal = startBal;
+  let cumInv = baseInvest;
+  let cumInc = baseIncome;
+  let wins = winCount();
+
+  const labels = [];
+  const balanceData = [];
+  const investData = [];
+  const incomeData = [];
+  const details = [];
+
+  labels.push('当前');
+  balanceData.push(bal);
+  investData.push(cumInv);
+  incomeData.push(cumInc);
+
+  for (let i = 1; i <= n; i++) {
+    const invest = bal * ratio;
+    const hit = Math.random() * 100 < rate;
+    let income = 0;
+    if (hit) {
+      income = invest * odds;
+      wins++;
+    }
+    bal = bal - invest + income;
+    cumInv += invest;
+    cumInc += income;
+
+    const periodNum = startPeriod + i;
+    labels.push('#' + periodNum);
+    balanceData.push(bal);
+    investData.push(cumInv);
+    incomeData.push(cumInc);
+
+    details.push({
+      period: periodNum,
+      invest,
+      hit,
+      income,
+      balanceAfter: bal
+    });
+
+    if (bal <= 0) {
+      showToast('远征已耗尽，推演提前结束', 'error');
+      break;
+    }
+  }
+
+  const actualSimRate = (wins / (startPeriod + details.length)) * 100;
+  const profit = cumInc - cumInv;
+  const profitRate = state.capital > 0 ? (profit / state.capital) * 100 : 0;
+
+  // render stats
+  $('simEndBalance').textContent = fmt(bal);
+  $('simEndBalance').className = 'sim-stat-val mono ' + (bal >= startBal ? 'gold' : 'red');
+  $('simTotalInvest').textContent = fmt(cumInv);
+  $('simTotalIncome').textContent = fmt(cumInc);
+  const profitEl = $('simProfit');
+  profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
+  profitEl.className = 'sim-stat-val mono ' + (profit >= 0 ? 'green' : 'red');
+  const rateEl = $('simProfitRate');
+  rateEl.textContent = (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%';
+  rateEl.className = 'sim-stat-val mono ' + (profit >= 0 ? 'green' : 'red');
+  $('simActualRate').textContent = actualSimRate.toFixed(1) + '%';
+
+  $('simDetailMeta').textContent = `共 ${details.length} 轮 · 凯旋 ${details.filter(d=>d.hit).length}`;
+
+  // render detail list
+  const list = $('simDetailList');
+  list.innerHTML = '';
+  [...details].reverse().forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'sim-detail-row';
+    row.innerHTML = `
+      <span class="sim-detail-period">#${d.period}</span>
+      <span class="sim-detail-invest">派 ${fmt(d.invest)}</span>
+      <span class="sim-detail-result ${d.hit ? 'win' : 'lose'}">${d.hit ? '凯旋 +' + fmt(d.income) : '折损'}</span>
+      <span class="sim-detail-balance">${fmt(d.balanceAfter)}</span>
+    `;
+    list.appendChild(row);
+  });
+
+  // render chart
+  if (simChart) simChart.destroy();
+  const ctx = $('simChart').getContext('2d');
+  simChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '远征',
+          data: balanceData,
+          borderColor: '#f0b90b',
+          backgroundColor: 'rgba(240,185,11,0.1)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        },
+        {
+          label: '累计派遣',
+          data: investData,
+          borderColor: '#4a9eff',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.3,
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0
+        },
+        {
+          label: '累计收获',
+          data: incomeData,
+          borderColor: '#00d4aa',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.3,
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: '#848e9c',
+            font: { size: 9, family: "'JetBrains Mono', monospace" },
+            boxWidth: 8,
+            boxHeight: 8,
+            padding: 6,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(19,24,41,0.95)',
+          borderColor: '#252c45',
+          borderWidth: 1,
+          titleColor: '#eaecef',
+          bodyColor: '#b7bdc6',
+          titleFont: { size: 10, family: "'Oswald', sans-serif" },
+          bodyFont: { size: 10, family: "'JetBrains Mono', monospace" },
+          padding: 8,
+          cornerRadius: 6,
+          callbacks: {
+            label: (c) => `${c.dataset.label}: ${fmt(c.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(37,44,69,0.3)' },
+          border: { display: false },
+          ticks: { color: '#5e6673', font: { size: 8 }, maxRotation: 0, autoSkipPadding: 20 }
+        },
+        y: {
+          grid: { color: 'rgba(37,44,69,0.3)' },
+          border: { display: false },
+          ticks: {
+            color: '#5e6673',
+            font: { size: 8 },
+            callback: (v) => Math.abs(v) >= 1000 ? (v/1000).toFixed(1) + 'k' : v.toFixed(0)
+          }
+        }
+      }
+    }
+  });
+
+  $('simResult').style.display = '';
+  showToast(`已推演 ${details.length} 轮`, 'success');
+}
+
+/* ============ Events ============ */
+// Place bet
+$('btnPlaceBet').addEventListener('click', openPlaceBetModal);
+$('btnQuickBet').addEventListener('click', openPlaceBetModal);
+$('btnCancelPlaceBet').addEventListener('click', closePlaceBetModal);
+$('btnConfirmPlaceBet').addEventListener('click', confirmPlaceBet);
+
+// Settle
+$('btnCancelSettle').addEventListener('click', closeSettleModal);
+$('btnConfirmSettle').addEventListener('click', confirmSettle);
+$('settleSwitchWin').addEventListener('click', () => { settleHit = true; updateSettlePreview();
+  $('settleSwitchWin').classList.add('active', 'win');
+  $('settleSwitchLose').classList.remove('active', 'lose');
+  $('settleOddsGroup').style.display = '';
+  $('settlePreviewIncomeRow').style.display = '';
+  $('btnConfirmSettle').className = 'modal-btn confirm win';
+  $('btnConfirmSettle').textContent = '确认凯旋';
+});
+$('settleSwitchLose').addEventListener('click', () => { settleHit = false; updateSettlePreview();
+  $('settleSwitchLose').classList.add('active', 'lose');
+  $('settleSwitchWin').classList.remove('active', 'win');
+  $('settleOddsGroup').style.display = 'none';
+  $('settlePreviewIncomeRow').style.display = 'none';
+  $('btnConfirmSettle').className = 'modal-btn confirm lose';
+  $('btnConfirmSettle').textContent = '确认折损';
+});
+$('settleInputOdds').addEventListener('input', updateSettlePreview);
+
+// Capital modal
+$('btnEditCapital').addEventListener('click', openCapitalModal);
+$('btnCancelCapital').addEventListener('click', closeCapitalModal);
+$('btnConfirmCapital').addEventListener('click', confirmCapital);
+
+// Reset
+$('btnReset').addEventListener('click', () => $('resetModal').classList.add('show'));
+$('btnCancelReset').addEventListener('click', () => $('resetModal').classList.remove('show'));
+$('btnConfirmReset').addEventListener('click', confirmReset);
+
+// Edit Record
+$('btnCancelEditOdds').addEventListener('click', closeEditRecordModal);
+$('btnConfirmEditOdds').addEventListener('click', confirmEditRecord);
+$('editOddsInput').addEventListener('input', updateEditRecordPreview);
+$('editSwitchWin').addEventListener('click', () => {
+  editHit = true;
+  $('editSwitchWin').classList.add('active', 'win');
+  $('editSwitchLose').classList.remove('active', 'lose');
+  $('editOddsGroup').style.display = '';
+  updateEditRecordPreview();
+});
+$('editSwitchLose').addEventListener('click', () => {
+  editHit = false;
+  $('editSwitchLose').classList.add('active', 'lose');
+  $('editSwitchWin').classList.remove('active', 'win');
+  $('editOddsGroup').style.display = 'none';
+  updateEditRecordPreview();
+});
+
+// Simulate
+$('btnSimulate').addEventListener('click', openSimulateModal);
+$('btnCloseSimulate').addEventListener('click', closeSimulateModal);
+$('btnRunSimulate').addEventListener('click', runSimulate);
+document.querySelectorAll('.sim-period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sim-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    simPeriod = parseInt(btn.dataset.period);
+  });
+});
+document.querySelector('.sim-period-btn[data-period="20"]').classList.add('active');
+
+// Chart tabs
+document.querySelectorAll('.chart-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    chartMode = tab.dataset.chart;
+    updateChart();
+  });
+});
+
+// Click mask to close
+['placeBetModal', 'settleModal', 'capitalModal', 'resetModal', 'editOddsModal', 'simulateModal'].forEach(id => {
+  $(id).addEventListener('click', (e) => {
+    if (e.target.id === id) $(id).classList.remove('show');
+  });
+});
+
+// Prevent zoom on double tap
+document.addEventListener('dblclick', (e) => e.preventDefault());
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
